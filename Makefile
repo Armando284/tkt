@@ -16,6 +16,11 @@ build:
 	go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY_NAME) $(MAIN_PATH)
 	@echo "✅ Built $(BINARY_NAME) for $(GOOS)/$(GOARCH)"
 
+# Build con debug logs
+build-debug:
+	go build -tags=debug -ldflags="-s -w -X main.version=$(VERSION)" -o bin/tkt-debug $(MAIN_PATH)
+	@echo "✅ Built with DEBUG logs (tkt-debug)"
+
 # Install globally in ~/bin
 install:
 	go install -ldflags="-s -w -X main.version=$(VERSION)" $(MAIN_PATH)

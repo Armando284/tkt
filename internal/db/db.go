@@ -3,10 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/armando284/tkt/internal/config"
-	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
+
+	"github.com/armando284/tkt/internal/config"
+	_ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
@@ -16,7 +17,7 @@ func Init() error {
 
 	dir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+		return fmt.Errorf("failed to create data directory: %w", err)
 	}
 
 	var err error
@@ -25,7 +26,7 @@ func Init() error {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Enable foreign keys and WAL mode for better performance
+	// Better performance and foreign key support
 	_, err = DB.Exec("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;")
 	if err != nil {
 		return err
@@ -51,6 +52,7 @@ func createTables() error {
 		branch TEXT,
 		project_root TEXT NOT NULL,
 		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(title, project_root),
 		FOREIGN KEY (project_root) REFERENCES projects(root_path) ON DELETE CASCADE
 	);
 
