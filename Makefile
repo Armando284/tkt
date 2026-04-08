@@ -3,7 +3,7 @@
 
 # Variables
 BINARY_NAME=tkt
-MAIN_PATH=cmd/tkt/main.go
+MAIN_PATH=./cmd/tkt
 VERSION=0.1.0-dev
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
