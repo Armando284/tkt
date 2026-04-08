@@ -1,0 +1,42 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+tkt
+tkt.exe
+
+# Go build artifacts
+*.test
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SQLite database (local)
+*.db
+tkt.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
