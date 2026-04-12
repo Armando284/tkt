@@ -4,8 +4,8 @@
 *.dll
 *.so
 *.dylib
-tkt
-tkt.exe
+/tkt
+/tkt.exe
 
 # Go build artifacts
 *.test
