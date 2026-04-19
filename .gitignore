@@ -43,3 +43,4 @@ tkt.db
 # Temporary files
 tmp/
 temp/
+.aider*
