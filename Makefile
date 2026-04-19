@@ -1,63 +1,33 @@
 # tkt - Makefile
-.PHONY: build install clean test run help
+.PHONY: build build-debug clean run dev
 
-# Variables
-BINARY_NAME=tkt
+BINARY_NAME=tkt-bin
 MAIN_PATH=./cmd/tkt
 VERSION=0.1.0-dev
-GOOS=$(shell go env GOOS)
-GOARCH=$(shell go env GOARCH)
 
-# Default target
 all: build
 
-# Build the binary
+# Build correcto - compila todo el paquete cmd/tkt
 build:
 	go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY_NAME) $(MAIN_PATH)
-	@echo "✅ Built $(BINARY_NAME) for $(GOOS)/$(GOARCH)"
+	@echo "✅ Built $(BINARY_NAME) → bin/$(BINARY_NAME)"
 
-# Build con debug logs
 build-debug:
-	go build -tags=debug -ldflags="-s -w -X main.version=$(VERSION)" -o bin/tkt-debug $(MAIN_PATH)
-	@echo "✅ Built with DEBUG logs (tkt-debug)"
+	go build -tags=debug -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY_NAME)-debug $(MAIN_PATH)
+	@echo "✅ Built with DEBUG logs → bin/$(BINARY_NAME)-debug"
 
-# Install globally in ~/bin
-install:
-	go install -ldflags="-s -w -X main.version=$(VERSION)" $(MAIN_PATH)
-	@echo "✅ Installed tkt to \$$GOPATH/bin (usually ~/go/bin)"
-	@echo "   Make sure ~/go/bin is in your PATH"
-
-# Build a static binary in bin/ (recommended for WSL)
-build-static:
-	mkdir -p bin
-	go build -ldflags="-s -w -X main.version=$(VERSION)" -o bin/$(BINARY_NAME)-$(GOOS)-$(GOARCH) $(MAIN_PATH)
-	@echo "✅ Static binary created: bin/$(BINARY_NAME)-$(GOOS)-$(GOARCH)"
-
-# Clean build artifacts
 clean:
 	rm -rf bin/
-	go clean
-	@echo "🧹 Cleaned build artifacts"
+	go clean -cache
+	@echo "🧹 Cleaned"
 
-# Run directly without building
 run:
 	go run $(MAIN_PATH)
 
-# Run with hello command (quick test)
-hello:
-	go run $(MAIN_PATH) hello Armando
+# Para probar comandos rápido
+dev:
+	go run $(MAIN_PATH) start 23
 
-# Run tests (when we have them)
-test:
-	go test ./...
-
-# Show help
-help:
-	@echo "Available commands:"
-	@echo "  make build          - Build binary into bin/"
-	@echo "  make install        - Install to GOPATH/bin"
-	@echo "  make build-static   - Build static binary"
-	@echo "  make clean          - Remove build artifacts"
-	@echo "  make run            - Run directly with go run"
-	@echo "  make hello          - Quick test: tkt hello Armando"
-	@echo "  make help           - Show this help"
+# Para probar list
+dev-list:
+	go run $(MAIN_PATH) list
