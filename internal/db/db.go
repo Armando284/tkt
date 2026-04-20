@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/armando284/tkt/internal/config"
 	_ "modernc.org/sqlite"
@@ -50,6 +51,7 @@ func createTables() error {
 		status TEXT DEFAULT 'todo',
 		folder TEXT,
 		branch TEXT,
+		current_start_ts TEXT,
 		project_root TEXT NOT NULL,
 		created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 		UNIQUE(title, project_root),
@@ -67,7 +69,18 @@ func createTables() error {
 	`
 
 	_, err := DB.Exec(schema)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Add missing columns if they don't exist
+	if _, err := DB.Exec(`ALTER TABLE tickets ADD COLUMN current_start_ts TEXT;`); err != nil {
+		if !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Close() error {

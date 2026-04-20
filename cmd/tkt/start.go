@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
@@ -56,7 +57,8 @@ var startCmd = &cobra.Command{
 		// ==================== CONSULTA SIMPLE AL TICKET ====================
 		fmt.Printf("DEBUG: Buscando ticket ID = %d en la BD...\n", ticketID)
 
-		var title, folder, branch, projectRoot string
+		var title, projectRoot string
+		var folder, branch sql.NullString
 
 		err = db.DB.QueryRow(`
 			SELECT title, folder, branch, project_root 
@@ -71,12 +73,12 @@ var startCmd = &cobra.Command{
 
 		fmt.Println("DEBUG: Ticket encontrado correctamente")
 		fmt.Printf("DEBUG: title       = '%s'\n", title)
-		fmt.Printf("DEBUG: folder      = '%s'\n", folder)
-		fmt.Printf("DEBUG: branch      = '%s'\n", branch)
+		fmt.Printf("DEBUG: folder      = '%s'\n", folder.String)
+		fmt.Printf("DEBUG: branch      = '%s'\n", branch.String)
 		fmt.Printf("DEBUG: project_root = '%s'\n", projectRoot)
 
 		// Determinar carpeta final
-		finalFolder := folder
+		finalFolder := folder.String
 		if finalFolder == "" {
 			finalFolder = projectRoot
 			fmt.Println("DEBUG: Usando project_root como folder")
@@ -87,10 +89,11 @@ var startCmd = &cobra.Command{
 		}
 
 		// Generar rama si no tiene
-		if branch == "" {
-			branch = fmt.Sprintf("feature/tkt-%04d-%s", ticketID, kebabCase(title))
-			fmt.Printf("DEBUG: Generando rama: %s\n", branch)
-			_, _ = db.DB.Exec("UPDATE tickets SET branch = ? WHERE id = ?", branch, ticketID)
+		if branch.String == "" {
+			branchStr := fmt.Sprintf("feature/tkt-%04d-%s", ticketID, kebabCase(title))
+			fmt.Printf("DEBUG: Generando rama: %s\n", branchStr)
+			_, _ = db.DB.Exec("UPDATE tickets SET branch = ? WHERE id = ?", branchStr, ticketID)
+			branch.String = branchStr // actualizar localmente
 		}
 
 		// Actualizar estado a in-progress
@@ -110,7 +113,7 @@ var startCmd = &cobra.Command{
 		// Salida para el wrapper bash
 		fmt.Println("CD:" + finalFolder)
 		fmt.Println("TICKET_ID:" + strconv.Itoa(ticketID))
-		fmt.Println("BRANCH:" + branch)
+		fmt.Println("BRANCH:" + branch.String)
 
 		fmt.Printf("✅ Iniciando ticket #%d → %s\n", ticketID, title)
 		return nil
