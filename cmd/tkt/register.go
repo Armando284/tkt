@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -41,8 +42,8 @@ var registerCmd = &cobra.Command{
 			return fmt.Errorf("failed to register project: %w", err)
 		}
 
-		fmt.Printf("✅ Project registered: %s\n", absRoot)
-		fmt.Printf("   Name: %s\n", name)
+		logger.L.Info(fmt.Sprintf("✅ Project registered: %s", absRoot))
+		logger.L.Info(fmt.Sprintf("   Name: %s", name))
 		return nil
 	},
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +23,8 @@ var listCmd = &cobra.Command{
 		}
 		defer rows.Close()
 
-		fmt.Println("ID   | Status       | Project          | Title")
-		fmt.Println("-----|--------------|------------------|-----------------------------------")
+		logger.L.Info("ID   | Status       | Project          | Title")
+		logger.L.Info("-----|--------------|------------------|-----------------------------------")
 
 		count := 0
 		for rows.Next() {
@@ -31,14 +33,14 @@ var listCmd = &cobra.Command{
 			if err := rows.Scan(&id, &title, &status, &folder, &project); err != nil {
 				continue
 			}
-			fmt.Printf("%-4d | %-12s | %-16s | %s\n", id, status, project, title)
+			logger.L.Info(fmt.Sprintf("%-4d | %-12s | %-16s | %s", id, status, project, title))
 			count++
 		}
 
 		if count == 0 {
-			fmt.Println("No tickets found yet. Run 'tkt scan' after registering projects.")
+			logger.L.Info("No tickets found yet. Run 'tkt scan' after registering projects.")
 		} else {
-			fmt.Printf("\nTotal tickets: %d\n", count)
+			logger.L.Info(fmt.Sprintf("Total tickets: %d", count))
 		}
 
 		return nil

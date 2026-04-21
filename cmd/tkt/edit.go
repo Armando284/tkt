@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -34,15 +35,15 @@ var editCmd = &cobra.Command{
 			return fmt.Errorf("ticket #%d not found", id)
 		}
 
-		fmt.Printf("Editing ticket #%d\n", id)
-		fmt.Printf("Current title : %s\n", title)
-		fmt.Printf("Current status: %s\n", status)
-		fmt.Printf("Current folder: %s\n\n", folder)
+		logger.L.Info(fmt.Sprintf("Editing ticket #%d", id))
+		logger.L.Info(fmt.Sprintf("Current title : %s", title))
+		logger.L.Info(fmt.Sprintf("Current status: %s", status))
+		logger.L.Info(fmt.Sprintf("Current folder: %s", folder))
 
 		reader := bufio.NewReader(os.Stdin)
 
 		// Editar título
-		fmt.Print("New title (press Enter to keep current): ")
+		logger.L.Info("New title (press Enter to keep current): ")
 		newTitle, _ := reader.ReadString('\n')
 		newTitle = strings.TrimSpace(newTitle)
 		if newTitle == "" {
@@ -50,7 +51,7 @@ var editCmd = &cobra.Command{
 		}
 
 		// Editar status
-		fmt.Printf("New status (todo/in-progress/done) [current: %s]: ", status)
+		logger.L.Info(fmt.Sprintf("New status (todo/in-progress/done) [current: %s]: ", status))
 		newStatus, _ := reader.ReadString('\n')
 		newStatus = strings.TrimSpace(newStatus)
 		if newStatus == "" {
@@ -58,7 +59,7 @@ var editCmd = &cobra.Command{
 		}
 
 		// Editar folder (opcional)
-		fmt.Print("New folder (press Enter to keep current): ")
+		logger.L.Info("New folder (press Enter to keep current): ")
 		newFolder, _ := reader.ReadString('\n')
 		newFolder = strings.TrimSpace(newFolder)
 		if newFolder == "" {
@@ -75,10 +76,10 @@ var editCmd = &cobra.Command{
 			return fmt.Errorf("failed to update ticket: %w", err)
 		}
 
-		fmt.Printf("\n✅ Ticket #%d updated successfully!\n", id)
-		fmt.Printf("   Title : %s\n", newTitle)
-		fmt.Printf("   Status: %s\n", newStatus)
-		fmt.Printf("   Folder: %s\n", newFolder)
+		logger.L.Info(fmt.Sprintf("✅ Ticket #%d updated successfully!", id))
+		logger.L.Info(fmt.Sprintf("   Title : %s", newTitle))
+		logger.L.Info(fmt.Sprintf("   Status: %s", newStatus))
+		logger.L.Info(fmt.Sprintf("   Folder: %s", newFolder))
 		return nil
 	},
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ var createCmd = &cobra.Command{
 			title = args[0]
 		} else {
 			// Modo interactivo
-			fmt.Print("Enter ticket title: ")
+			logger.L.Info("Enter ticket title: ")
 			reader := bufio.NewReader(os.Stdin)
 			title, _ = reader.ReadString('\n')
 			title = strings.TrimSpace(title)
@@ -43,10 +44,10 @@ var createCmd = &cobra.Command{
 			return fmt.Errorf("failed to create ticket: %w", err)
 		}
 
-		fmt.Printf("✅ Ticket created successfully!\n")
-		fmt.Printf("   Title : %s\n", title)
-		fmt.Printf("   Status: todo\n")
-		fmt.Printf("   Folder: %s\n", folder)
+		logger.L.Info("✅ Ticket created successfully!")
+		logger.L.Info(fmt.Sprintf("   Title : %s", title))
+		logger.L.Info("   Status: todo")
+		logger.L.Info(fmt.Sprintf("   Folder: %s", folder))
 		return nil
 	},
 }

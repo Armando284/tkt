@@ -6,6 +6,7 @@ import (
 
 	"github.com/armando284/tkt/internal/config"
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -23,18 +24,19 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		if err := db.Init(); err != nil {
-			return fmt.Errorf("failed to initialize database: %w", err)
+			logger.L.Error(fmt.Sprintf("failed to initialize database: %v", err))
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("🚀 tkt - Personal Ticket System")
-		fmt.Printf("   Version %s\n", version)
-		fmt.Println("\nUse 'tkt --help' to see available commands.")
+		logger.L.Info("🚀 tkt - Personal Ticket System")
+		logger.L.Info(fmt.Sprintf("   Version %s", version))
+		logger.L.Info("\nUse 'tkt --help' to see available commands.")
 	},
 }
 
 func init() {
+	logger.Init()
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(helloCmd)
 	// New commands will be added here in future steps 
@@ -44,7 +46,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("tkt version %s\n", version)
+		logger.L.Info(fmt.Sprintf("tkt version %s", version))
 	},
 }
 
@@ -57,7 +59,7 @@ var helloCmd = &cobra.Command{
 		if len(args) > 0 {
 			name = args[0]
 		}
-		fmt.Printf("👋 Hello %s! tkt is ready.\n", name)
+		logger.L.Info(fmt.Sprintf("👋 Hello %s! tkt is ready.", name))
 	},
 }
 
@@ -65,7 +67,7 @@ func main() {
 	defer db.Close()
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logger.L.Error(fmt.Sprintf("Error: %v", err))
 		os.Exit(1)
 	}
 }

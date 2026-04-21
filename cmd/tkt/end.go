@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ var endCmd = &cobra.Command{
 		var startTs string
 		err = db.DB.QueryRow("SELECT current_start_ts FROM tickets WHERE id = ?", id).Scan(&startTs)
 		if err != nil || startTs == "" {
-			fmt.Println("No active session found for this ticket.")
+			logger.L.Info("No active session found for this ticket.")
 			return nil
 		}
 
@@ -41,7 +42,7 @@ var endCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("✅ Session ended for ticket #%d. Time saved.\n", id)
+		logger.L.Info(fmt.Sprintf("✅ Session ended for ticket #%d. Time saved.", id))
 		return nil
 	},
 }

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/armando284/tkt/internal/db"
-	"github.com/armando284/tkt/internal/utils"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -40,17 +40,17 @@ var scanCmd = &cobra.Command{
 		}
 
 		if len(projects) == 0 {
-			fmt.Println("❌ No projects registered yet. Use 'tkt register' first.")
+			logger.L.Info("❌ No projects registered yet. Use 'tkt register' first.")
 			return nil
 		}
 
-		fmt.Printf("🔍 Scanning %d project(s) for TODO comments...\n\n", len(projects))
+		logger.L.Info(fmt.Sprintf("🔍 Scanning %d project(s) for TODO comments...", len(projects)))
 
 		todoRegex := regexp.MustCompile(`(?im)(?:^|[\s])(?:\/\/|/\*|#)\s*(TODO|FIXME|HACK):\s*(.+?)(?:\s*\*/|$)`)
 		newTickets := 0
 
 		for _, proj := range projects {
-			fmt.Printf("📁 Scanning: %s\n", proj.name)
+			logger.L.Info(fmt.Sprintf("📁 Scanning: %s", proj.name))
 
 			err := filepath.WalkDir(proj.root, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
@@ -71,7 +71,7 @@ var scanCmd = &cobra.Command{
 					return nil
 				}
 
-				utils.Dev.Debugf("scanning file: %s", path)
+				logger.L.Debug(fmt.Sprintf("scanning file: %s", path))
 
 				content, err := os.ReadFile(path)
 				if err != nil {
@@ -88,7 +88,7 @@ var scanCmd = &cobra.Command{
 						continue
 					}
 
-					utils.Dev.Debugf("found TODO: %s in %s", title, path)
+					logger.L.Debug(fmt.Sprintf("found TODO: %s in %s", title, path))
 
 					_, err := db.DB.Exec(`
 						INSERT INTO tickets (title, folder, project_root, status)
@@ -97,23 +97,22 @@ var scanCmd = &cobra.Command{
 					`, title, filepath.Dir(path), proj.root)
 
 					if err != nil {
-						utils.Dev.Errorf("failed to insert ticket %q: %v", title, err)
+						logger.L.Debug(fmt.Sprintf("failed to insert ticket %q: %v", title, err))
 						continue
 					}
 
-					utils.Dev.Debugf("inserted ticket: %s", title)
+					logger.L.Debug(fmt.Sprintf("inserted ticket: %s", title))
 					newTickets++
-					fmt.Printf("  ✅ Created ticket: %s\n", title)
 				}
 				return nil
 			})
 
 			if err != nil {
-				fmt.Printf("  ⚠️  Error scanning %s: %v\n", proj.name, err)
+				logger.L.Error(fmt.Sprintf("Error scanning %s: %v", proj.name, err))
 			}
 		}
 
-		fmt.Printf("\n🎉 Scan completed! %d new tickets created.\n", newTickets)
+		logger.L.Info(fmt.Sprintf("🎉 Scan completed! %d new tickets created.", newTickets))
 		return nil
 	},
 }

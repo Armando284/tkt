@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +64,7 @@ var deleteCmd = &cobra.Command{
 			`, id).Scan(&title, &status)
 
 			if err != nil {
-				fmt.Printf("⚠️  Ticket #%d not found, skipping...\n", id)
+				logger.L.Info(fmt.Sprintf("⚠️  Ticket #%d not found, skipping...", id))
 				continue
 			}
 
@@ -71,30 +72,30 @@ var deleteCmd = &cobra.Command{
 		}
 
 		if len(tickets) == 0 {
-			fmt.Println("❌ No tickets found to delete.")
+			logger.L.Info("❌ No tickets found to delete.")
 			return nil
 		}
 
 		// Mostrar tickets que se van a eliminar
-		fmt.Println("The following tickets will be deleted:")
-		fmt.Println("--------------------------------------------------")
+		logger.L.Info("The following tickets will be deleted:")
+		logger.L.Info("--------------------------------------------------")
 		for _, t := range tickets {
-			fmt.Printf("#%-4d | %-12s | %s\n", t.ID, t.Status, t.Title)
+			logger.L.Info(fmt.Sprintf("#%-4d | %-12s | %s", t.ID, t.Status, t.Title))
 		}
-		fmt.Println("--------------------------------------------------")
+		logger.L.Info("--------------------------------------------------")
 
 		// Confirmación general
 		if len(tickets) > 1 {
-			fmt.Printf("Are you sure you want to delete these %d tickets? (y/N): ", len(tickets))
+			logger.L.Info(fmt.Sprintf("Are you sure you want to delete these %d tickets? (y/N): ", len(tickets)))
 		} else {
-			fmt.Print("Are you sure you want to delete this ticket? (y/N): ")
+			logger.L.Info("Are you sure you want to delete this ticket? (y/N): ")
 		}
 
 		var confirm string
 		fmt.Scanln(&confirm)
 
 		if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-			fmt.Println("Delete operation cancelled.")
+			logger.L.Info("Delete operation cancelled.")
 			return nil
 		}
 
@@ -102,29 +103,29 @@ var deleteCmd = &cobra.Command{
 		deleted := 0
 		for _, t := range tickets {
 			if len(tickets) > 1 {
-				fmt.Printf("\nDelete ticket #%d: %s ? (y/N): ", t.ID, t.Title)
+				logger.L.Info(fmt.Sprintf("Delete ticket #%d: %s ? (y/N): ", t.ID, t.Title))
 				var singleConfirm string
 				fmt.Scanln(&singleConfirm)
 
 				if strings.ToLower(strings.TrimSpace(singleConfirm)) != "y" {
-					fmt.Printf("Skipping ticket #%d\n", t.ID)
+					logger.L.Info(fmt.Sprintf("Skipping ticket #%d", t.ID))
 					continue
 				}
 			}
 
 			result, err := db.DB.Exec("DELETE FROM tickets WHERE id = ?", t.ID)
 			if err != nil {
-				fmt.Printf("❌ Failed to delete ticket #%d: %v\n", t.ID, err)
+				logger.L.Error(fmt.Sprintf("❌ Failed to delete ticket #%d: %v", t.ID, err))
 				continue
 			}
 
 			if rows, _ := result.RowsAffected(); rows > 0 {
-				fmt.Printf("✅ Deleted ticket #%d\n", t.ID)
+				logger.L.Info(fmt.Sprintf("✅ Deleted ticket #%d", t.ID))
 				deleted++
 			}
 		}
 
-		fmt.Printf("\nDeletion completed. %d ticket(s) deleted.\n", deleted)
+		logger.L.Info(fmt.Sprintf("Deletion completed. %d ticket(s) deleted.", deleted))
 		return nil
 	},
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -15,47 +16,47 @@ var startCmd = &cobra.Command{
 	Short: "Start working on a ticket",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("=== DEBUG: start command started ===")
+		logger.L.Debug("start command started")
 
 		var ticketID int
 		var err error
 
 		// ==================== MODO CON ID O INTERACTIVO ====================
 		if len(args) > 0 {
-			fmt.Printf("DEBUG: Modo directo con ID = %s\n", args[0])
+			logger.L.Debug(fmt.Sprintf("Modo directo con ID = %s", args[0]))
 			ticketID, err = strconv.Atoi(args[0])
 			if err != nil {
 				return fmt.Errorf("ID inválido: %s", args[0])
 			}
 		} else {
-			fmt.Println("DEBUG: Modo interactivo - mostrando lista")
+			logger.L.Debug("Modo interactivo - mostrando lista")
 			rows, err := db.DB.Query("SELECT id, status, title FROM tickets ORDER BY id DESC")
 			if err != nil {
 				return fmt.Errorf("error consultando tickets: %w", err)
 			}
 			defer rows.Close()
 
-			fmt.Println("ID   | Status       | Title")
-			fmt.Println("-----|--------------|-----------------------------")
+			logger.L.Info("ID   | Status       | Title")
+			logger.L.Info("-----|--------------|-----------------------------")
 
 			for rows.Next() {
 				var id int
 				var status, title string
 				if err := rows.Scan(&id, &status, &title); err == nil {
-					fmt.Printf("%-4d | %-12s | %s\n", id, status, title)
+					logger.L.Info(fmt.Sprintf("%-4d | %-12s | %s", id, status, title))
 				}
 			}
 
-			fmt.Print("\nElige el ID del ticket: ")
+			logger.L.Info("\nElige el ID del ticket: ")
 			_, err = fmt.Scanln(&ticketID)
 			if err != nil {
 				return fmt.Errorf("entrada inválida")
 			}
-			fmt.Printf("DEBUG: Usuario seleccionó ID = %d\n", ticketID)
+			logger.L.Debug(fmt.Sprintf("Usuario seleccionó ID = %d", ticketID))
 		}
 
 		// ==================== CONSULTA SIMPLE AL TICKET ====================
-		fmt.Printf("DEBUG: Buscando ticket ID = %d en la BD...\n", ticketID)
+		logger.L.Debug(fmt.Sprintf("Buscando ticket ID = %d en la BD...", ticketID))
 
 		var title, projectRoot string
 		var folder, branch sql.NullString
@@ -67,37 +68,37 @@ var startCmd = &cobra.Command{
 		`, ticketID).Scan(&title, &folder, &branch, &projectRoot)
 
 		if err != nil {
-			fmt.Printf("DEBUG: QueryRow falló con error: %v\n", err)
+			logger.L.Debug(fmt.Sprintf("QueryRow falló con error: %v", err))
 			return fmt.Errorf("❌ Ticket #%d NO encontrado", ticketID)
 		}
 
-		fmt.Println("DEBUG: Ticket encontrado correctamente")
-		fmt.Printf("DEBUG: title       = '%s'\n", title)
-		fmt.Printf("DEBUG: folder      = '%s'\n", folder.String)
-		fmt.Printf("DEBUG: branch      = '%s'\n", branch.String)
-		fmt.Printf("DEBUG: project_root = '%s'\n", projectRoot)
+		logger.L.Debug("Ticket encontrado correctamente")
+		logger.L.Debug(fmt.Sprintf("title       = '%s'", title))
+		logger.L.Debug(fmt.Sprintf("folder      = '%s'", folder.String))
+		logger.L.Debug(fmt.Sprintf("branch      = '%s'", branch.String))
+		logger.L.Debug(fmt.Sprintf("project_root = '%s'", projectRoot))
 
 		// Determinar carpeta final
 		finalFolder := folder.String
 		if finalFolder == "" {
 			finalFolder = projectRoot
-			fmt.Println("DEBUG: Usando project_root como folder")
+			logger.L.Debug("Usando project_root como folder")
 		}
 		if finalFolder == "" {
 			finalFolder = "."
-			fmt.Println("DEBUG: Usando '.' como folder")
+			logger.L.Debug("Usando '.' como folder")
 		}
 
 		// Generar rama si no tiene
 		if branch.String == "" {
 			branchStr := fmt.Sprintf("feature/tkt-%04d-%s", ticketID, kebabCase(title))
-			fmt.Printf("DEBUG: Generando rama: %s\n", branchStr)
+			logger.L.Debug(fmt.Sprintf("Generando rama: %s", branchStr))
 			_, _ = db.DB.Exec("UPDATE tickets SET branch = ? WHERE id = ?", branchStr, ticketID)
 			branch.String = branchStr // actualizar localmente
 		}
 
 		// Actualizar estado a in-progress
-		fmt.Println("DEBUG: Actualizando ticket a 'in-progress'...")
+		logger.L.Debug("Actualizando ticket a 'in-progress'...")
 		_, err = db.DB.Exec(`
 			UPDATE tickets 
 			SET status = 'in-progress', 
@@ -105,17 +106,17 @@ var startCmd = &cobra.Command{
 			WHERE id = ?
 		`, ticketID)
 		if err != nil {
-			fmt.Printf("DEBUG: Error al actualizar estado: %v\n", err)
+			logger.L.Debug(fmt.Sprintf("Error al actualizar estado: %v", err))
 		} else {
-			fmt.Println("DEBUG: Estado actualizado correctamente")
+			logger.L.Debug("Estado actualizado correctamente")
 		}
 
 		// Salida para el wrapper bash
-		fmt.Println("CD:" + finalFolder)
-		fmt.Println("TICKET_ID:" + strconv.Itoa(ticketID))
-		fmt.Println("BRANCH:" + branch.String)
+		logger.L.Info(fmt.Sprintf("CD:%s", finalFolder))
+		logger.L.Info(fmt.Sprintf("TICKET_ID:%s", strconv.Itoa(ticketID)))
+		logger.L.Info(fmt.Sprintf("BRANCH:%s", branch.String))
 
-		fmt.Printf("✅ Iniciando ticket #%d → %s\n", ticketID, title)
+		logger.L.Info(fmt.Sprintf("✅ Iniciando ticket #%d → %s", ticketID, title))
 		return nil
 	},
 }

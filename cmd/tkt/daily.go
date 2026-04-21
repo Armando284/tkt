@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/armando284/tkt/internal/db"
+	"github.com/armando284/tkt/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +30,7 @@ Sin argumentos muestra el día de hoy.`,
 			targetDate = time.Now().Format("2006-01-02")
 		}
 
-		fmt.Printf("=== Reporte de tiempo - %s ===\n\n", targetDate)
+		logger.L.Info(fmt.Sprintf("=== Reporte de tiempo - %s ===", targetDate))
 
 		rows, err := db.DB.Query(`
 			SELECT 
@@ -55,8 +56,8 @@ Sin argumentos muestra el día de hoy.`,
 		var totalDaySeconds int
 		hasResults := false
 
-		fmt.Println("ID   | Status       | Tiempo     | Sesiones | Título")
-		fmt.Println("-----|--------------|------------|----------|-----------------------------------")
+		logger.L.Info("ID   | Status       | Tiempo     | Sesiones | Título")
+		logger.L.Info("-----|--------------|------------|----------|-----------------------------------")
 
 		for rows.Next() {
 			hasResults = true
@@ -77,12 +78,12 @@ Sin argumentos muestra el día de hoy.`,
 				timeStr = fmt.Sprintf("%dm", minutes)
 			}
 
-			fmt.Printf("%-4d | %-12s | %-10s | %-8d | %s\n",
-				id, status, timeStr, sessions, title)
+			logger.L.Info(fmt.Sprintf("%-4d | %-12s | %-10s | %-8d | %s",
+				id, status, timeStr, sessions, title))
 		}
 
 		if !hasResults {
-			fmt.Printf("No se registró tiempo el día %s.\n", targetDate)
+			logger.L.Info(fmt.Sprintf("No se registró tiempo el día %s.", targetDate))
 			return nil
 		}
 
@@ -90,9 +91,9 @@ Sin argumentos muestra el día de hoy.`,
 		totalHours := totalDaySeconds / 3600
 		totalMinutes := (totalDaySeconds % 3600) / 60
 
-		fmt.Println("-------------------------------------------------------------")
-		fmt.Printf("Total del día: %dh %dm (%d minutos)\n", 
-			totalHours, totalMinutes, totalDaySeconds/60)
+		logger.L.Info("-------------------------------------------------------------")
+		logger.L.Info(fmt.Sprintf("Total del día: %dh %dm (%d minutos)", 
+			totalHours, totalMinutes, totalDaySeconds/60))
 
 		return nil
 	},
