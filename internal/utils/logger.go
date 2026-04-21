@@ -1,23 +1,40 @@
-package utils
+package logger
 
-// Logger es la interfaz que usarás en todo el código
-type Logger interface {
-	Debugf(format string, args ...any)
-	Infof(format string, args ...any)
-	Warnf(format string, args ...any)
-	Errorf(format string, args ...any)
+import (
+	"log/slog"
+	"os"
+	"strings"
+
+	"github.com/charmbracelet/log"
+)
+
+var L *slog.Logger // logger global (igual que en JS)
+
+func Init() {
+	level := parseLevel(os.Getenv("LOG_LEVEL"))
+
+	// Charmbracelet/log es un handler de slog con salida hermosa para terminal
+	handler := log.NewWithOptions(os.Stderr, log.Options{
+		Level:           log.Level(level),
+		ReportTimestamp: true,
+		ReportCaller:    false, // opcional: true si quieres archivo:line
+	})
+
+	L = slog.New(handler)
+
+	// Lo ponemos como default para que cualquier paquete pueda usar slog.Default()
+	slog.SetDefault(L)
 }
 
-// Dev es la implementación que se usa en desarrollo
-var Dev Logger = &devLogger{}
-
-type devLogger struct{}
-
-func (l *devLogger) Debugf(format string, args ...any) {}
-func (l *devLogger) Infof(format string, args ...any)  {}
-func (l *devLogger) Warnf(format string, args ...any)  {}
-func (l *devLogger) Errorf(format string, args ...any) { l.log("ERROR", format, args...) }
-
-func (l *devLogger) log(level, format string, args ...any) {
-	// En producción este archivo ni siquiera se compila
+func parseLevel(lvl string) slog.Level {
+	switch strings.ToLower(strings.TrimSpace(lvl)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

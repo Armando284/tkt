@@ -1,6 +1,5 @@
 package main
 
-// TODO: add command start
 import (
 	"fmt"
 	"os"
